@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from router import item
-from router import site
+from routes import item
+from routes import site
+from routes import rota_db
 
 #Instanciando o fastapi
 app = FastAPI()
@@ -13,3 +14,5 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(item.router, tags=["Item"])
 
 app.include_router(site.router, tags=["Site"])
+
+app.include_router(rota_db.router, tags=["InfluxDB"])
