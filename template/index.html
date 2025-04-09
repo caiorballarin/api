@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<header class="header">
+    <h1>Figuras interativas</h1>
+    <p>Clique em uma figura para ir para um endpoint da API.</p>
+</header>
+
+<div class="card">
+    <div class="figures-grid">
+        {% for figure in figuras %}
+        <a href="/figura/{{ figure.id }}" class="figure-item">
+            <div class="figure-shape-container">
+                <img src="/static/icon_server.png" alt="{{ figure.name }}" style="width: 64px; height: 64px;" />
+            </div>
+            <span>{{ figure.name }}</span>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
