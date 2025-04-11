@@ -3,6 +3,7 @@ from influxdb_client import Point
 from datetime import datetime, timedelta
 from fastapi.templating import Jinja2Templates
 from db_conect import write_api, query_api, client
+from collections import defaultdict
 import os
 
 router = APIRouter()
@@ -63,21 +64,25 @@ def listar_cidades_validas():
 @router.get("/dashboard/{cidade}")
 def dashboard(request: Request, cidade: str):
     dash_query = f'''
-    from(bucket= "{INFLUX_BUCKET}")
-        |> range(start: -30d)
-        |> filter( (r) => r._measurement == "Leitura" and r["cidade"] == "{cidade}")
+    from(bucket: "{INFLUX_BUCKET}")
+      |> range(start: -24h)
+      |> filter(fn: (r) => r._measurement == "Leitura" and r["cidade"] == "{cidade}")
     '''
     result = query_api.query(dash_query, org=INFLUX_ORG)
 
-    dados = []
-    for table in table:
+    dados_agrupados = defaultdict(dict)
+
+    for table in result:
         for record in table.records:
-            dados.append({
-                "tempo": record.get_time(),
-                "campo": record.get_field(),
-                "valor": record.get_value()
-            })
-    
+            tempo = record.get_time().isoformat()
+            campo = record.get_field()
+            valor = record.get_value()
+
+            dados_agrupados[tempo]["tempo"] = tempo
+            dados_agrupados[tempo][campo] = valor
+
+    dados = list(dados_agrupados.values())
+
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
         "cidade": cidade,

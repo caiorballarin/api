@@ -1,55 +1,80 @@
-<!-- template/dashboard.html -->
 {% extends "base.html" %}
 
 {% block title %}Dashboard - {{ cidade }}{% endblock %}
 
 {% block content %}
+<div class="dashboard-container">
   <h2>Dashboard da cidade: {{ cidade }}</h2>
 
+  <!-- Área do gráfico -->
   <canvas id="grafico" width="800" height="400"></canvas>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    const dadosSensor = JSON.parse('{{ dados | tojson  | safe}}');
-    const labels = dadosSensor.filter(d => d.campo === "temperatura").map(d => d.tempo);
-    const tempData = dadosSensor.filter(d => d.campo === "temperatura").map(d => d.valor);
-    const umiData = dadosSensor.filter(d => d.campo === "umidade").map(d => d.valor);
-
+    const dadosSensor = JSON.parse(`{{ dados | tojson | safe }}`);
+  
+    const labels = dadosSensor.map(d => new Date(d.tempo).toLocaleString());
+    const temperaturas = dadosSensor.map(d => d.temperatura ?? null);
+    const umidades = dadosSensor.map(d => d.umidade ?? null);
+  
     const ctx = document.getElementById('grafico').getContext('2d');
-    const grafico = new Chart(ctx, {
+    new Chart(ctx, {
       type: 'line',
       data: {
         labels: labels,
         datasets: [
           {
-            label: 'Temperatura',
-            data: tempData,
+            label: 'Temperatura (°C)',
+            data: temperaturas,
             borderColor: 'red',
             fill: false
           },
           {
-            label: 'Umidade',
-            data: umiData,
+            label: 'Umidade (%)',
+            data: umidades,
             borderColor: 'blue',
             fill: false
           }
         ]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Horário'
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Valor'
+            }
+          }
+        }
       }
     });
   </script>
-
-  <h3>Tabela de Dados</h3>
-  <table border="1">
-    <tr>
-      <th>Tempo</th>
-      <th>Campo</th>
-      <th>Valor</th>
-    </tr>
-    {% for dado in dados %}
-    <tr>
-      <td>{{ dado.tempo }}</td>
-      <td>{{ dado.campo }}</td>
-      <td>{{ dado.valor }}</td>
-    </tr>
-    {% endfor %}
+  <br>
+  <h3>Tabela de dados</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Tempo</th>
+        <th>Temperatura (°C)</th>
+        <th>Umidade (%)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for dado in dados %}
+      <tr>
+        <td>{{ dado.tempo }}</td>
+        <td>{{ dado.temperatura or "-" }}</td>
+        <td>{{ dado.umidade or "-" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
   </table>
+  
 {% endblock %}
